@@ -25,7 +25,7 @@
         const { useState, useMemo, useEffect } = React;
         const { createClient } = supabase;
 
-        // --- CONFIGURATION SUPABASE (Remplace par tes vraies clés ici aussi) ---
+        // --- CONFIGURATION SUPABASE INTÉGRÉE ---
         const SUPABASE_URL = "https://pudwivglduriyoowwoap.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_3Znwn5zoP8Cop0fB1M_JpQ_CRhglTDG";
         const clientSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -156,7 +156,6 @@
           const chargerActionsSupabase = async () => {
             setIsFetching(true);
             try {
-              // Récupère les données enregistrées par ton robot sur Supabase
               const { data, error } = await clientSupabase
                 .from('actions_supermarches')
                 .select('*')
@@ -183,7 +182,7 @@
             magasins.forEach(mag => {
               nouvellesActions[mag] = {};
               tousIngredients.forEach(ing => {
-                nouvellesActions[mag][ing] = 0.85; // -15% par défaut
+                nouvellesActions[mag][ing] = 0.85;
               });
             });
             
