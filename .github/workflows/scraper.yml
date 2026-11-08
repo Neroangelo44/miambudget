@@ -1,27 +1,27 @@
 name: Bot Scraper Quotidien Supermarchés
 
 on:
-schedule:
-- cron: '0 6 * * *'
-workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
 
 jobs:
-run-scraper:
-runs-on: ubuntu-latest
-steps:
-- name: Récupération du code source
-uses: actions/checkout@v4
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
 
-  - name: Configuration de Node.js
-    uses: actions/setup-node@v4
-    with:
-      node-version: '20'
+      - name: Configuration de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-  - name: Installation des dépendances du scraper
-    run: npm install axios cheerio @supabase/supabase-js
+      - name: Installation des dépendances du scraper
+        run: npm install axios cheerio @supabase/supabase-js
 
-  - name: Exécution du Bot Scraper
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-    run: node scraper.js
+      - name: Exécution du Bot Scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node scraper.js
