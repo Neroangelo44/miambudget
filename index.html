@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiamBudget &bull; Menus & Courses</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+        
+        // Safe icon mock fallbacks to prevent undefined component crashes
+        const Wifi = () => <span className="inline-block">📶</span>;
+        const Cloud = () => <span className="inline-block">☁️</span>;
+        const Lock = () => <span className="inline-block">🔒</span>;
+        const LogOut = () => <span className="inline-block">🚪</span>;
+        const Users = () => <span className="inline-block">👥</span>;
+        const Calendar = () => <span className="inline-block">📅</span>;
+        const ShoppingCart = () => <span className="inline-block">🛒</span>;
+        const BookOpen = () => <span className="inline-block">📖</span>;
+        const Sparkles = () => <span className="inline-block">✨</span>;
+        const RefreshCw = () => <span className="inline-block">🔄</span>;
+        const ChefHat = () => <span className="inline-block">👨‍🍳</span>;
+        const Store = () => <span className="inline-block">🏬</span>;
+        const CheckSquare = () => <span className="inline-block">☑️</span>;
+        const Square = () => <span className="inline-block">🟩</span>;
+
+        const RECETTES_DISPONIBLES = [
+          {
+            id: 1,
+            nom: "Poulet Rôti & Légumes de Saison",
+            categorie: "Plat Principal",
+            temps: "45 min",
+            description: "Un poulet rôti croustillant accompagné de carottes et d'oignons fondants.",
+            recette_ingredients: [
+              { ingredients: { nom: "Poulet", prix: 12.50 }, quantite: 1200, unite: "g" },
+              { ingredients: { nom: "Carottes", prix: 2.20 }, quantite: 500, unite: "g" },
+              { ingredients: { nom: "Oignon", prix: 1.80 }, quantite: 200, unite: "g" },
+              { ingredients: { nom: "Huile", prix: 4.50 }, quantite: 30, unite: "ml" }
+            ],
+            etapes: [
+              "Préchauffer le four à 200°C.",
+              "Badigeonner le poulet d'huile, saler et poivrer.",
+              "Disposer les carottes et les oignons coupés autour dans un plat.",
+              "Enfourner pendant 45 minutes en arrosant régulièrement."
+            ]
+          },
+          {
+            id: 2,
+            nom: "Curry de Poulet & Riz Basmati",
+            categorie: "Plat Principal",
+            temps: "30 min",
+            description: "Émincé de poulet mijoté dans une sauce onctueuse au curry.",
+            recette_ingredients: [
+              { ingredients: { nom: "Poulet", prix: 12.50 }, quantite: 600, unite: "g" },
+              { ingredients: { nom: "Riz", prix: 3.00 }, quantite: 300, unite: "g" },
+              { ingredients: { nom: "Oignon", prix: 1.80 }, quantite: 150, unite: "g" },
+              { ingredients: { nom: "Ail", prix: 2.00 }, quantite: 15, unite: "g" }
+            ],
+            etapes: [
+              "Faire cuire le riz basmati dans de l'eau bouillante salée.",
+              "Faire revenir les oignons et l'ail émincés dans une poêle.",
+              "Ajouter les morceaux de poulet et les faire dorer.",
+              "Saupoudrer de curry, ajouter un fond d'eau et laisser mijoter 15 minutes."
+            ]
+          },
+          {
+            id: 3,
+            nom: "Omelette Gourmande & Salade",
+            categorie: "Végétarien",
+            temps: "15 min",
+            description: "Une omelette légère accompagnée de carottes râpées.",
+            recette_ingredients: [
+              { ingredients: { nom: "Oeuf", prix: 4.20 }, quantite: 4, unite: "œufs" },
+              { ingredients: { nom: "Lait", prix: 1.60 }, quantite: 100, unite: "ml" },
+              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 20, unite: "g" },
+              { ingredients: { nom: "Carottes", prix: 2.20 }, quantite: 300, unite: "g" }
+            ],
+            etapes: [
+              "Battre les œufs avec un peu de lait, du sel et du poivre.",
+              "Fondre le beurre dans une poêle chaude et verser les œufs.",
+              "Cuire à feu moyen selon la consistance désirée."
+            ]
+          },
+          {
+            id: 4,
+            nom: "Rösti Bernois au Lard & Fromage",
+            categorie: "Spécialité Suisse",
+            temps: "40 min",
+            description: "Galette de pommes de terre râpées croustillante, garnie de lardons.",
+            recette_ingredients: [
+              { ingredients: { nom: "Pommes de terre", prix: 3.50 }, quantite: 800, unite: "g" },
+              { ingredients: { nom: "Lardons", prix: 4.50 }, quantite: 150, unite: "g" },
+              { ingredients: { nom: "Gruyère râpé", prix: 5.20 }, quantite: 150, unite: "g" },
+              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 40, unite: "g" }
+            ],
+            etapes: [
+              "Râper les pommes de terre crues ou précuites.",
+              "Faire dorer les lardons dans une poêle.",
+              "Mélanger les pommes de terre, former une grande galette et cuire 15 min de chaque côté."
+            ]
+          },
+          {
+            id: 5,
+            nom: "Steak, Purée & Haricots Verts",
+            categorie: "Plat Complet",
+            temps: "30 min",
+            description: "Le repas complet par excellence.",
+            recette_ingredients: [
+              { ingredients: { nom: "Viande hachée de bœuf", prix: 8.50 }, quantite: 400, unite: "g" },
+              { ingredients: { nom: "Pommes de terre", prix: 3.50 }, quantite: 800, unite: "g" },
+              { ingredients: { nom: "Haricots verts", prix: 3.20 }, quantite: 400, unite: "g" },
+              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 50, unite: "g" },
+              { ingredients: { nom: "Lait", prix: 1.60 }, quantite: 150, unite: "ml" }
+            ],
+            etapes: [
+              "Cuire les pommes de terre à l'eau et les écraser en purée.",
+              "Faire cuire les haricots verts à la vapeur.",
+              "Poêler les steaks hachés et servir l'ensemble."
+            ]
+          }
+        ];
+
+        function App() {
+          const [activeTab, setActiveTab] = useState('menus');
+          const [adultes, setAdultes] = useState(2);
+          const [enfants, setEnfants] = useState(1);
+          const [budgetMax, setBudgetMax] = useState(120);
+          const [checkedItems, setCheckedItems] = useState({});
+          const [recetteSelectionnee, setRecetteSelectionnee] = useState(null);
+
+          const [menus, setMenus] = useState([
+            { id: 1, jour: 'Lundi', midi: RECETTES_DISPONIBLES[2], soir: RECETTES_DISPONIBLES[0] },
+            { id: 2, jour: 'Mardi', midi: RECETTES_DISPONIBLES[4], soir: RECETTES_DISPONIBLES[1] },
+            { id: 3, jour: 'Mercredi', midi: RECETTES_DISPONIBLES[3], soir: RECETTES_DISPONIBLES[2] },
+            { id: 4, jour: 'Jeudi', midi: RECETTES_DISPONIBLES[0], soir: RECETTES_DISPONIBLES[4] },
+            { id: 5, jour: 'Vendredi', midi: RECETTES_DISPONIBLES[1], soir: RECETTES_DISPONIBLES[3] }
+          ]);
+
+          const coefficientConvives = useMemo(() => adultes + (enfants * 0.5), [adultes, enfants]);
+
+          const getCoutRecette = (recette) => {
+            if (!recette || !recette.recette_ingredients) return 0;
+            return recette.recette_ingredients.reduce((acc, ri) => {
+              const qte = (ri.quantite || 1) * coefficientConvives;
+              let facteur = (ri.unite === 'g' || ri.unite === 'ml') ? qte / 1000 : qte;
+              return acc + (facteur * (ri.ingredients?.prix || 0));
+            }, 0);
+          };
+
+          const budgetTotal = useMemo(() => {
+            return menus.reduce((acc, m) => acc + getCoutRecette(m.midi) + getCoutRecette(m.soir), 0);
+          }, [menus, coefficientConvives]);
+
+          const listeCourses = useMemo(() => {
+            const accum = {};
+            menus.forEach(m => {
+              [m.midi, m.soir].forEach(rec => {
+                if (!rec || !rec.recette_ingredients) return;
+                rec.recette_ingredients.forEach(ri => {
+                  const nom = ri.ingredients?.nom || 'Article';
+                  const qte = (ri.quantite || 1) * coefficientConvives;
+                  const prixRef = ri.ingredients?.prix || 0;
+                  const unite = ri.unite || 'unité';
+
+                  if (!accum[nom]) {
+                    accum[nom] = { quantite: 0, unite, prixUnitaire: prixRef };
+                  }
+                  accum[nom].quantite += qte;
+                });
+              });
+            });
+            return accum;
+          }, [menus, coefficientConvives]);
+
+          return (
+            <div className="max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col pb-20">
+              
+              {/* Header mobile */}
+              <header className="bg-emerald-600 text-white p-5 sticky top-0 z-20 shadow-md">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h1 className="text-xl font-black">MiamBudget Suisse</h1>
+                    <p className="text-xs text-emerald-100">Gestion de menus & courses</p>
+                  </div>
+                  <div className="flex items-center space-x-2 bg-emerald-700/60 px-3 py-1.5 rounded-xl text-xs font-bold">
+                    <span>👥 {adultes}A / {enfants}E</span>
+                  </div>
+                </div>
+              </header>
+
+              {/* Contenu principal */}
+              <main className="p-4 flex-1 space-y-4">
+                
+                {/* Contrôle budget / convives rapide */}
+                <div className="bg-white p-4 rounded-2xl shadow-xs border border-slate-200 space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-bold text-slate-700">Budget prévisionnel :</span>
+                    <span className={`font-black ${budgetTotal > budgetMax ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {budgetTotal.toFixed(2)} / {budgetMax} CHF
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full ${budgetTotal > budgetMax ? 'bg-red-500' : 'bg-emerald-500'}`}
+                      style={{ width: `${Math.min((budgetTotal / budgetMax) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Onglet Menus */}
+                {activeTab === 'menus' && (
+                  <div className="space-y-3">
+                    <h2 className="text-sm font-bold uppercase text-slate-400 tracking-wider">Planning de la semaine</h2>
+                    {menus.map((m, idx) => (
+                      <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                          <span className="font-black text-slate-900">{m.jour}</span>
+                          <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                            {(getCoutRecette(m.midi) + getCoutRecette(m.soir)).toFixed(2)} CHF
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div onClick={() => setRecetteSelectionnee(m.midi)} className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 cursor-pointer">
+                            <span className="block text-[10px] font-bold text-slate-400">MIDI</span>
+                            <span className="font-bold text-slate-800 line-clamp-1">{m.midi.nom}</span>
+                          </div>
+                          <div onClick={() => setRecetteSelectionnee(m.soir)} className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 cursor-pointer">
+                            <span className="block text-[10px] font-bold text-slate-400">SOIR</span>
+                            <span className="font-bold text-slate-800 line-clamp-1">{m.soir.nom}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Onglet Courses */}
+                {activeTab === 'courses' && (
+                  <div className="space-y-3">
+                    <h2 className="text-sm font-bold uppercase text-slate-400 tracking-wider">Liste de courses</h2>
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
+                      {Object.entries(listeCourses).map(([nom, data]) => {
+                        const qteAff = data.unite === 'g' || data.unite === 'ml' 
+                          ? `${(data.quantite >= 1000 ? (data.quantite/1000).toFixed(2) + ' kg/L' : Math.round(data.quantite) + ' ' + data.unite)}`
+                          : `${Math.round(data.quantite)} ${data.unite}`;
+                        const isChecked = !!checkedItems[nom];
+
+                        return (
+                          <div 
+                            key={nom} 
+                            onClick={() => setCheckedItems(p => ({...p, [nom]: !p[nom]}))}
+                            className={`p-3.5 flex items-center justify-between cursor-pointer ${isChecked ? 'bg-slate-50 opacity-50 line-through' : ''}`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <input type="checkbox" checked={isChecked} onChange={() => {}} className="w-4 h-4 text-emerald-600 rounded" />
+                              <span className="font-medium text-sm text-slate-800">{nom}</span>
+                            </div>
+                            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
+                              {qteAff}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+              </main>
+
+              {/* Barre de navigation mobile inférieure fixe */}
+              <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 p-3 flex justify-around shadow-lg z-30">
+                <button 
+                  onClick={() => setActiveTab('menus')}
+                  className={`flex flex-col items-center text-xs font-bold ${activeTab === 'menus' ? 'text-emerald-600' : 'text-slate-400'}`}
+                >
+                  <span>📅 Menus</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('courses')}
+                  className={`flex flex-col items-center text-xs font-bold ${activeTab === 'courses' ? 'text-emerald-600' : 'text-slate-400'}`}
+                >
+                  <span>🛒 Courses</span>
+                </button>
+              </nav>
+
+              {/* Modale recette */}
+              {recetteSelectionnee && (
+                <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+                  <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-lg font-black text-slate-900">{recetteSelectionnee.nom}</h3>
+                      <button onClick={() => setRecetteSelectionnee(null)} className="text-slate-400 font-bold p-1">✕</button>
+                    </div>
+                    <p className="text-xs text-slate-600 italic">{recetteSelectionnee.description}</p>
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase text-slate-400">Étapes de préparation :</h4>
+                      <ol className="space-y-2 text-xs text-slate-700">
+                        {recetteSelectionnee.etapes.map((e, i) => (
+                          <li key={i} className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex space-x-2">
+                            <span className="font-bold text-emerald-600">{i+1}.</span>
+                            <span>{e}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                    <button onClick={() => setRecetteSelectionnee(null)} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md">
+                      Fermer
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+
+const SUPABASE_URL = "https://pudwivglduriyoowwoap.supabase.co";
+   const SUPABASE_ANON_KEY = "sb_publishable_3Znwn5zoP8Cop0fB1M_JpQ_CRhglTDG";
