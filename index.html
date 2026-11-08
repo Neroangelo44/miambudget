@@ -30,8 +30,7 @@
         const SUPABASE_ANON_KEY = "sb_publishable_3Znwn5zoP8Cop0fB1M_JpQ_CRhglTDG";
         const clientSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Composants d'icônes simplifiés
-        const Wifi = () => <span className="inline-block">📶</span>;
+        // Composants d'icônes
         const Cloud = () => <span className="inline-block">☁️</span>;
         const Lock = () => <span className="inline-block">🔒</span>;
         const LogOut = () => <span className="inline-block">🚪</span>;
@@ -45,6 +44,7 @@
         const Store = () => <span className="inline-block">🏬</span>;
         const CheckSquare = () => <span className="inline-block">☑️</span>;
         const Square = () => <span className="inline-block">⬜</span>;
+        const Wifi = () => <span className="inline-block">📶</span>;
 
         const RECETTES_DISPONIBLES = [
           {
@@ -54,10 +54,10 @@
             temps: "45 min",
             description: "Un poulet rôti croustillant accompagné de carottes et d'oignons fondants.",
             recette_ingredients: [
-              { ingredients: { nom: "Poulet", prix: 12.50 }, quantite: 1200, unite: "g" },
-              { ingredients: { nom: "Carottes", prix: 2.20 }, quantite: 500, unite: "g" },
-              { ingredients: { nom: "Oignon", prix: 1.80 }, quantite: 200, unite: "g" },
-              { ingredients: { nom: "Huile", prix: 4.50 }, quantite: 30, unite: "ml" }
+              { ingredients: { nom: "poulet", prix: 12.50 }, quantite: 1200, unite: "g" },
+              { ingredients: { nom: "carottes", prix: 2.20 }, quantite: 500, unite: "g" },
+              { ingredients: { nom: "oignon", prix: 1.80 }, quantite: 200, unite: "g" },
+              { ingredients: { nom: "huile", prix: 4.50 }, quantite: 30, unite: "ml" }
             ],
             etapes: [
               "Préchauffer le four à 200°C.",
@@ -73,10 +73,10 @@
             temps: "30 min",
             description: "Émincé de poulet mijoté dans une sauce onctueuse au curry, servi avec du riz.",
             recette_ingredients: [
-              { ingredients: { nom: "Poulet", prix: 12.50 }, quantite: 600, unite: "g" },
-              { ingredients: { nom: "Riz", prix: 3.00 }, quantite: 300, unite: "g" },
-              { ingredients: { nom: "Oignon", prix: 1.80 }, quantite: 150, unite: "g" },
-              { ingredients: { nom: "Ail", prix: 2.00 }, quantite: 15, unite: "g" }
+              { ingredients: { nom: "poulet", prix: 12.50 }, quantite: 600, unite: "g" },
+              { ingredients: { nom: "riz", prix: 3.00 }, quantite: 300, unite: "g" },
+              { ingredients: { nom: "oignon", prix: 1.80 }, quantite: 150, unite: "g" },
+              { ingredients: { nom: "ail", prix: 2.00 }, quantite: 15, unite: "g" }
             ],
             etapes: [
               "Faire cuire le riz basmati dans de l'eau bouillante salée.",
@@ -92,10 +92,10 @@
             temps: "15 min",
             description: "Une omelette légère et baveuse accompagnée de carottes râpées.",
             recette_ingredients: [
-              { ingredients: { nom: "Oeuf", prix: 4.20 }, quantite: 4, unite: "œufs" },
-              { ingredients: { nom: "Lait", prix: 1.60 }, quantite: 100, unite: "ml" },
-              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 20, unite: "g" },
-              { ingredients: { nom: "Carottes", prix: 2.20 }, quantite: 300, unite: "g" }
+              { ingredients: { nom: "oeuf", prix: 4.20 }, quantite: 4, unite: "œufs" },
+              { ingredients: { nom: "lait", prix: 1.60 }, quantite: 100, unite: "ml" },
+              { ingredients: { nom: "beurre", prix: 3.20 }, quantite: 20, unite: "g" },
+              { ingredients: { nom: "carottes", prix: 2.20 }, quantite: 300, unite: "g" }
             ],
             etapes: [
               "Battre les œufs avec un peu de lait, du sel et du poivre.",
@@ -111,10 +111,10 @@
             temps: "40 min",
             description: "Galette de pommes de terre râpées croustillante, garnie de lardons et de fromage fondu.",
             recette_ingredients: [
-              { ingredients: { nom: "Pommes de terre", prix: 3.50 }, quantite: 800, unite: "g" },
-              { ingredients: { nom: "Lardons", prix: 4.50 }, quantite: 150, unite: "g" },
-              { ingredients: { nom: "Gruyère râpé", prix: 5.20 }, quantite: 150, unite: "g" },
-              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 40, unite: "g" }
+              { ingredients: { nom: "pommes de terre", prix: 3.50 }, quantite: 800, unite: "g" },
+              { ingredients: { nom: "lardons", prix: 4.50 }, quantite: 150, unite: "g" },
+              { ingredients: { nom: "gruyère râpé", prix: 5.20 }, quantite: 150, unite: "g" },
+              { ingredients: { nom: "beurre", prix: 3.20 }, quantite: 40, unite: "g" }
             ],
             etapes: [
               "Râper les pommes de terre crues ou précuites.",
@@ -165,29 +165,11 @@
               if (data && data.length > 0 && data[0].donnees) {
                 setActionsSemaine(data[0].donnees);
                 setLastSync(new Date(data[0].updated_at).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }));
-              } else {
-                simulerConnexionAPI();
               }
             } catch (e) {
-              simulerConnexionAPI();
+              console.error("Erreur de chargement Supabase", e);
             }
             setIsFetching(false);
-          };
-
-          const simulerConnexionAPI = () => {
-            const tousIngredients = [...new Set(RECETTES_DISPONIBLES.flatMap(r => r.recette_ingredients.map(ri => ri.ingredients.nom)))];
-            const nouvellesActions = {};
-            const magasins = ["Migros", "Coop", "Denner", "Lidl", "Aldi"];
-            
-            magasins.forEach(mag => {
-              nouvellesActions[mag] = {};
-              tousIngredients.forEach(ing => {
-                nouvellesActions[mag][ing] = 0.85;
-              });
-            });
-            
-            setActionsSemaine(nouvellesActions);
-            setLastSync(new Date().toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }));
           };
 
           useEffect(() => {
@@ -235,8 +217,8 @@
             const stores = ['Migros', 'Coop', 'Denner', 'Lidl', 'Aldi'];
             stores.forEach(store => {
               const storeInfo = supermarchesDisponibles[store];
-              const storePromo = actionsSemaine[store]?.[nom] || 1;
-              const currentOriginal = prixRef * storeInfo.multiplicateur;
+              const storePromo = actionsSemaine[store]?.[nom.toLowerCase()] || 1;
+              const currentOriginal = prixRef * (storeInfo.multiplicateur || 1);
               const currentPrice = currentOriginal * storePromo;
 
               if (currentPrice < bestPrice) {
@@ -355,10 +337,18 @@
             <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-4 sm:p-6 pb-24">
               <header className="max-w-4xl mx-auto bg-white rounded-3xl p-5 shadow-sm border border-slate-200 mb-6 flex justify-between items-center">
                 <div>
-                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full flex items-center w-fit">
-                    <Cloud className="w-3.5 h-3.5 mr-1 text-emerald-500" />
-                    Supabase Connecté
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full flex items-center w-fit">
+                      <Cloud className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                      Supabase Connecté
+                    </span>
+                    {lastSync && (
+                      <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded flex items-center">
+                        <Wifi className="w-3 h-3 mr-1 text-emerald-500" />
+                        Robot synchronisé à {lastSync}
+                      </span>
+                    )}
+                  </div>
                   <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">MiamBudget Suisse</h1>
                 </div>
                 <button onClick={handleLogout} className="bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 p-2.5 rounded-2xl transition">
@@ -412,7 +402,12 @@
 
                 {activeTab === 'courses' && (
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                    <div className="p-4 bg-slate-100 border-b font-bold text-sm">Liste de courses intelligente (Actions du robot)</div>
+                    <div className="p-4 bg-slate-100 border-b font-bold text-sm flex justify-between items-center">
+                      <span>Liste de courses intelligente (Actions du robot)</span>
+                      <button onClick={chargerActionsSupabase} className="text-xs text-emerald-600 font-bold hover:underline flex items-center">
+                        <RefreshCw className="w-3 h-3 mr-1" /> Actualiser
+                      </button>
+                    </div>
                     <div className="divide-y divide-slate-100">
                       {Object.entries(listeCourses).map(([nom, data]) => {
                         const isChecked = !!checkedItems[nom];
@@ -421,11 +416,19 @@
                             <div className="flex items-center space-x-3">
                               <span className="text-lg">{isChecked ? '☑️' : '⬜'}</span>
                               <div>
-                                <span className="font-medium text-slate-800">{nom}</span>
-                                {data.enPromo && <span className="ml-2 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px] font-black">Action -{data.remise}%</span>}
+                                <span className="font-medium text-slate-800 capitalize">{nom}</span>
+                                <span className="ml-2 text-xs text-slate-400 font-semibold">({data.magasin})</span>
+                                {data.enPromo && (
+                                  <span className="ml-2 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px] font-black uppercase">
+                                    Action -{data.remise}%
+                                  </span>
+                                )}
                               </div>
                             </div>
-                            <span className="font-bold text-emerald-700">~ {data.quantite >= 1000 ? `${(data.quantite/1000).toFixed(2)} kg` : `${Math.round(data.quantite)} g`}</span>
+                            <div className="text-right">
+                              <span className="font-bold text-emerald-700 block">~ {data.quantite >= 1000 ? `${(data.quantite/1000).toFixed(2)} kg` : `${Math.round(data.quantite)} g`}</span>
+                              <span className="text-xs text-slate-500 font-semibold">{(data.quantite >= 1000 ? (data.quantite/1000) * data.prixUnitaire : (data.quantite/1000) * data.prixUnitaire).toFixed(2)} CHF</span>
+                            </div>
                           </div>
                         );
                       })}
