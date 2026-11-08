@@ -11,6 +11,8 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -21,7 +23,14 @@
 
     <script type="text/babel">
         const { useState, useMemo, useEffect } = React;
-        
+        const { createClient } = supabase;
+
+        // --- CONFIGURATION SUPABASE (Remplace par tes vraies clés ici aussi) ---
+        const SUPABASE_URL = "https://TON_PROJET_ID.supabase.co";
+        const SUPABASE_ANON_KEY = "TON_CLE_ANON_PUBLIQUE_ICI";
+        const clientSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Composants d'icônes simplifiés
         const Wifi = () => <span className="inline-block">📶</span>;
         const Cloud = () => <span className="inline-block">☁️</span>;
         const Lock = () => <span className="inline-block">🔒</span>;
@@ -35,7 +44,7 @@
         const ChefHat = () => <span className="inline-block">👨‍🍳</span>;
         const Store = () => <span className="inline-block">🏬</span>;
         const CheckSquare = () => <span className="inline-block">☑️</span>;
-        const Square = () => <span className="inline-block">🟩</span>;
+        const Square = () => <span className="inline-block">⬜</span>;
 
         const RECETTES_DISPONIBLES = [
           {
@@ -62,7 +71,7 @@
             nom: "Curry de Poulet & Riz Basmati",
             categorie: "Plat Principal",
             temps: "30 min",
-            description: "Émincé de poulet mijoté dans une sauce onctueuse au curry.",
+            description: "Émincé de poulet mijoté dans une sauce onctueuse au curry, servi avec du riz.",
             recette_ingredients: [
               { ingredients: { nom: "Poulet", prix: 12.50 }, quantite: 600, unite: "g" },
               { ingredients: { nom: "Riz", prix: 3.00 }, quantite: 300, unite: "g" },
@@ -75,36 +84,187 @@
               "Ajouter les morceaux de poulet et les faire dorer.",
               "Saupoudrer de curry, ajouter un fond d'eau et laisser mijoter 15 minutes."
             ]
+          },
+          {
+            id: 3,
+            nom: "Omelette Gourmande & Salade",
+            categorie: "Végétarien",
+            temps: "15 min",
+            description: "Une omelette légère et baveuse accompagnée de carottes râpées.",
+            recette_ingredients: [
+              { ingredients: { nom: "Oeuf", prix: 4.20 }, quantite: 4, unite: "œufs" },
+              { ingredients: { nom: "Lait", prix: 1.60 }, quantite: 100, unite: "ml" },
+              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 20, unite: "g" },
+              { ingredients: { nom: "Carottes", prix: 2.20 }, quantite: 300, unite: "g" }
+            ],
+            etapes: [
+              "Battre les œufs avec un peu de lait, du sel et du poivre.",
+              "Fondre le beurre dans une poêle chaude et verser les œufs.",
+              "Cuire à feu moyen selon la consistance désirée.",
+              "Servir chaud accompagné de carottes râpées."
+            ]
+          },
+          {
+            id: 4,
+            nom: "Rösti Bernois au Lard & Fromage",
+            categorie: "Spécialité Suisse",
+            temps: "40 min",
+            description: "Galette de pommes de terre râpées croustillante, garnie de lardons et de fromage fondu.",
+            recette_ingredients: [
+              { ingredients: { nom: "Pommes de terre", prix: 3.50 }, quantite: 800, unite: "g" },
+              { ingredients: { nom: "Lardons", prix: 4.50 }, quantite: 150, unite: "g" },
+              { ingredients: { nom: "Gruyère râpé", prix: 5.20 }, quantite: 150, unite: "g" },
+              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 40, unite: "g" }
+            ],
+            etapes: [
+              "Râper les pommes de terre crues ou précuites.",
+              "Faire dorer les lardons dans une poêle.",
+              "Mélanger les pommes de terre, former une grande galette dans le beurre chaud.",
+              "Cuire 15 min de chaque côté, parsemer de Gruyère à la fin."
+            ]
           }
         ];
 
         function App() {
+          const [session, setSession] = useState(null);
+          const [email, setEmail] = useState('');
+          const [password, setPassword] = useState('');
+          const [authLoading, setAuthLoading] = useState(false);
+          const [authError, setAuthError] = useState('');
+
           const [activeTab, setActiveTab] = useState('menus');
           const [adultes, setAdultes] = useState(2);
           const [enfants, setEnfants] = useState(1);
-          const [budgetMax, setBudgetMax] = useState(120);
-          const [checkedItems, setCheckedItems] = useState({});
+          const [supermarcheActif] = useState('Optimise');
           const [recetteSelectionnee, setRecetteSelectionnee] = useState(null);
+          const [checkedItems, setCheckedItems] = useState({});
+          const [budgetMax, setBudgetMax] = useState(150);
+
+          const [actionsSemaine, setActionsSemaine] = useState({});
+          const [isFetching, setIsFetching] = useState(false);
+          const [lastSync, setLastSync] = useState(null);
+
+          const supermarchesDisponibles = {
+            "Optimise": { nom: "🌟 100% Optimisé", multiplicateur: null },
+            "Migros": { nom: "Migros", multiplicateur: 1.0 },
+            "Coop": { nom: "Coop", multiplicateur: 1.12 },
+            "Denner": { nom: "Denner", multiplicateur: 0.88 },
+            "Lidl": { nom: "Lidl", multiplicateur: 0.82 },
+            "Aldi": { nom: "Aldi", multiplicateur: 0.80 }
+          };
+
+          const chargerActionsSupabase = async () => {
+            setIsFetching(true);
+            try {
+              // Récupère les données enregistrées par ton robot sur Supabase
+              const { data, error } = await clientSupabase
+                .from('actions_supermarches')
+                .select('*')
+                .order('date', { ascending: false })
+                .limit(1);
+
+              if (data && data.length > 0 && data[0].donnees) {
+                setActionsSemaine(data[0].donnees);
+                setLastSync(new Date(data[0].updated_at).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }));
+              } else {
+                simulerConnexionAPI();
+              }
+            } catch (e) {
+              simulerConnexionAPI();
+            }
+            setIsFetching(false);
+          };
+
+          const simulerConnexionAPI = () => {
+            const tousIngredients = [...new Set(RECETTES_DISPONIBLES.flatMap(r => r.recette_ingredients.map(ri => ri.ingredients.nom)))];
+            const nouvellesActions = {};
+            const magasins = ["Migros", "Coop", "Denner", "Lidl", "Aldi"];
+            
+            magasins.forEach(mag => {
+              nouvellesActions[mag] = {};
+              tousIngredients.forEach(ing => {
+                nouvellesActions[mag][ing] = 0.85; // -15% par défaut
+              });
+            });
+            
+            setActionsSemaine(nouvellesActions);
+            setLastSync(new Date().toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }));
+          };
+
+          useEffect(() => {
+            clientSupabase.auth.getSession().then(({ data: { session } }) => {
+              setSession(session);
+              if (session) chargerActionsSupabase();
+            });
+
+            const { data: { subscription } } = clientSupabase.auth.onAuthStateChange((_event, session) => {
+              setSession(session);
+              if (session) chargerActionsSupabase();
+            });
+
+            return () => subscription.unsubscribe();
+          }, []);
+
+          const handleLogin = async (e) => {
+            e.preventDefault();
+            setAuthLoading(true);
+            setAuthError('');
+            const { error } = await clientSupabase.auth.signInWithPassword({ email, password });
+            if (error) setAuthError(error.message);
+            setAuthLoading(false);
+          };
+
+          const handleLogout = async () => {
+            await clientSupabase.auth.signOut();
+          };
 
           const [menus, setMenus] = useState([
-            { id: 1, jour: 'Lundi', midi: RECETTES_DISPONIBLES[0], soir: RECETTES_DISPONIBLES[1] },
-            { id: 2, jour: 'Mardi', midi: RECETTES_DISPONIBLES[1], soir: RECETTES_DISPONIBLES[0] }
+            { id: 1, jour: 'Lundi', midi: RECETTES_DISPONIBLES[2], soir: RECETTES_DISPONIBLES[0] },
+            { id: 2, jour: 'Mardi', midi: RECETTES_DISPONIBLES[3], soir: RECETTES_DISPONIBLES[1] },
+            { id: 3, jour: 'Mercredi', midi: RECETTES_DISPONIBLES[0], soir: RECETTES_DISPONIBLES[2] }
           ]);
 
           const coefficientConvives = useMemo(() => adultes + (enfants * 0.5), [adultes, enfants]);
+
+          const getBestPrice = (nom, prixRef) => {
+            let bestStore = 'Migros';
+            let bestPrice = Infinity;
+            let enPromo = false;
+            let remise = 0;
+            let originalAtBestStore = prixRef;
+
+            const stores = ['Migros', 'Coop', 'Denner', 'Lidl', 'Aldi'];
+            stores.forEach(store => {
+              const storeInfo = supermarchesDisponibles[store];
+              const storePromo = actionsSemaine[store]?.[nom] || 1;
+              const currentOriginal = prixRef * storeInfo.multiplicateur;
+              const currentPrice = currentOriginal * storePromo;
+
+              if (currentPrice < bestPrice) {
+                bestPrice = currentPrice;
+                bestStore = store;
+                enPromo = storePromo < 1;
+                remise = enPromo ? Math.round((1 - storePromo) * 100) : 0;
+                originalAtBestStore = currentOriginal;
+              }
+            });
+
+            return { bestStore, bestPrice, enPromo, remise, originalAtBestStore };
+          };
 
           const getCoutRecette = (recette) => {
             if (!recette || !recette.recette_ingredients) return 0;
             return recette.recette_ingredients.reduce((acc, ri) => {
               const qte = (ri.quantite || 1) * coefficientConvives;
               let facteur = (ri.unite === 'g' || ri.unite === 'ml') ? qte / 1000 : qte;
-              return acc + (facteur * (ri.ingredients?.prix || 0));
+              const best = getBestPrice(ri.ingredients?.nom, ri.ingredients?.prix || 0);
+              return acc + (facteur * best.bestPrice);
             }, 0);
           };
 
           const budgetTotal = useMemo(() => {
             return menus.reduce((acc, m) => acc + getCoutRecette(m.midi) + getCoutRecette(m.soir), 0);
-          }, [menus, coefficientConvives]);
+          }, [menus, coefficientConvives, actionsSemaine]);
 
           const listeCourses = useMemo(() => {
             const accum = {};
@@ -117,70 +277,133 @@
                   const prixRef = ri.ingredients?.prix || 0;
                   const unite = ri.unite || 'unité';
 
+                  const best = getBestPrice(nom, prixRef);
+
                   if (!accum[nom]) {
-                    accum[nom] = { quantite: 0, unite, prixUnitaire: prixRef };
+                    accum[nom] = { 
+                      quantite: 0, 
+                      unite, 
+                      prixUnitaire: best.bestPrice,
+                      prixOriginal: best.originalAtBestStore,
+                      enPromo: best.enPromo,
+                      remise: best.remise,
+                      magasin: best.bestStore
+                    };
                   }
                   accum[nom].quantite += qte;
                 });
               });
             });
             return accum;
-          }, [menus, coefficientConvives]);
+          }, [menus, coefficientConvives, actionsSemaine]);
+
+          if (!session) {
+            return (
+              <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 max-w-md w-full space-y-6">
+                  <div className="text-center">
+                    <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold uppercase">
+                      Connexion Sécurisée Supabase
+                    </span>
+                    <h1 className="text-2xl font-black text-slate-900 mt-3">MiamBudget Cloud</h1>
+                    <p className="text-sm text-slate-500 mt-1">Connectez-vous pour retrouver vos menus.</p>
+                  </div>
+
+                  {authError && (
+                    <div className="bg-red-50 text-red-700 p-3 rounded-xl text-xs font-medium border border-red-200">
+                      {authError}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Email</label>
+                      <input 
+                        type="email" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="votre.email@domaine.ch"
+                        required
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Mot de passe</label>
+                      <input 
+                        type="password" 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                    <button 
+                      type="submit"
+                      disabled={authLoading}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-md transition flex items-center justify-center"
+                    >
+                      <Lock className="w-4 h-4 mr-2" />
+                      {authLoading ? 'Connexion...' : 'Se connecter'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            );
+          }
 
           return (
-            <div className="max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col pb-20">
-              <header className="bg-emerald-600 text-white p-5 sticky top-0 z-20 shadow-md">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h1 className="text-xl font-black">MiamBudget Suisse</h1>
-                    <p className="text-xs text-emerald-100">Synchronisé avec GitHub & Supabase</p>
-                  </div>
-                  <div className="flex items-center space-x-2 bg-emerald-700/60 px-3 py-1.5 rounded-xl text-xs font-bold">
-                    <span>👥 {adultes}A / {enfants}E</span>
-                  </div>
+            <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-4 sm:p-6 pb-24">
+              <header className="max-w-4xl mx-auto bg-white rounded-3xl p-5 shadow-sm border border-slate-200 mb-6 flex justify-between items-center">
+                <div>
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full flex items-center w-fit">
+                    <Cloud className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                    Supabase Connecté
+                  </span>
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">MiamBudget Suisse</h1>
                 </div>
+                <button onClick={handleLogout} className="bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 p-2.5 rounded-2xl transition">
+                  <LogOut className="w-5 h-5" />
+                </button>
               </header>
 
-              <main className="p-4 flex-1 space-y-4">
-                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-xs text-emerald-800 space-y-1">
-                  <p className="font-bold flex items-center"><Cloud className="w-4 h-4 mr-1 text-emerald-600"/> Bot Scraper GitHub Prêt :</p>
-                  <p>Un script de scraping automatisé peut maintenant tourner en arrière-plan sur vos serveurs GitHub Actions pour mettre à jour vos prix chaque jour.</p>
-                </div>
-
-                <div className="bg-white p-4 rounded-2xl shadow-xs border border-slate-200 space-y-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-bold text-slate-700">Budget prévisionnel :</span>
-                    <span className={`font-black ${budgetTotal > budgetMax ? 'text-red-600' : 'text-emerald-600'}`}>
-                      {budgetTotal.toFixed(2)} / {budgetMax} CHF
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${budgetTotal > budgetMax ? 'bg-red-500' : 'bg-emerald-500'}`}
-                      style={{ width: `${Math.min((budgetTotal / budgetMax) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
+              <main className="max-w-4xl mx-auto space-y-6">
+                <nav className="flex space-x-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs">
+                  <button onClick={() => setActiveTab('menus')} className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${activeTab === 'menus' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    📅 Menus
+                  </button>
+                  <button onClick={() => setActiveTab('courses')} className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${activeTab === 'courses' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    🛒 Courses ({Object.keys(listeCourses).length})
+                  </button>
+                  <button onClick={() => setActiveTab('catalogue')} className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${activeTab === 'catalogue' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    📖 Catalogue
+                  </button>
+                </nav>
 
                 {activeTab === 'menus' && (
-                  <div className="space-y-3">
-                    <h2 className="text-sm font-bold uppercase text-slate-400 tracking-wider">Planning de la semaine</h2>
+                  <div className="space-y-4">
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center">
+                      <div>
+                        <h2 className="font-bold text-slate-900">Planning de la semaine</h2>
+                        <p className="text-xs text-slate-500">Foyer : {adultes} adultes, {enfants} enfants</p>
+                      </div>
+                      <span className="font-black text-emerald-600 text-lg">{budgetTotal.toFixed(2)} CHF</span>
+                    </div>
+
                     {menus.map((m, idx) => (
                       <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                          <span className="font-black text-slate-900">{m.jour}</span>
-                          <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                            {(getCoutRecette(m.midi) + getCoutRecette(m.soir)).toFixed(2)} CHF
-                          </span>
+                        <div className="flex justify-between font-bold text-sm border-b pb-2">
+                          <span>{m.jour}</span>
+                          <span className="text-emerald-700">{(getCoutRecette(m.midi) + getCoutRecette(m.soir)).toFixed(2)} CHF</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div onClick={() => setRecetteSelectionnee(m.midi)} className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 cursor-pointer">
-                            <span className="block text-[10px] font-bold text-slate-400">MIDI</span>
-                            <span className="font-bold text-slate-800 line-clamp-1">{m.midi.nom}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div onClick={() => setRecetteSelectionnee(m.midi)} className="bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer">
+                            <span className="text-[10px] font-bold text-slate-400">MIDI</span>
+                            <h4 className="font-bold text-sm text-slate-800">{m.midi.nom}</h4>
                           </div>
-                          <div onClick={() => setRecetteSelectionnee(m.soir)} className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 cursor-pointer">
-                            <span className="block text-[10px] font-bold text-slate-400">SOIR</span>
-                            <span className="font-bold text-slate-800 line-clamp-1">{m.soir.nom}</span>
+                          <div onClick={() => setRecetteSelectionnee(m.soir)} className="bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer">
+                            <span className="text-[10px] font-bold text-slate-400">SOIR</span>
+                            <h4 className="font-bold text-sm text-slate-800">{m.soir.nom}</h4>
                           </div>
                         </div>
                       </div>
@@ -189,59 +412,53 @@
                 )}
 
                 {activeTab === 'courses' && (
-                  <div className="space-y-3">
-                    <h2 className="text-sm font-bold uppercase text-slate-400 tracking-wider">Liste de courses</h2>
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
+                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                    <div className="p-4 bg-slate-100 border-b font-bold text-sm">Liste de courses intelligente (Actions du robot)</div>
+                    <div className="divide-y divide-slate-100">
                       {Object.entries(listeCourses).map(([nom, data]) => {
-                        const qteAff = `${Math.round(data.quantite)} ${data.unite}`;
                         const isChecked = !!checkedItems[nom];
                         return (
-                          <div 
-                            key={nom} 
-                            onClick={() => setCheckedItems(p => ({...p, [nom]: !p[nom]}))}
-                            className={`p-3.5 flex items-center justify-between cursor-pointer ${isChecked ? 'bg-slate-50 opacity-50 line-through' : ''}`}
-                          >
+                          <div key={nom} onClick={() => setCheckedItems(p => ({...p, [nom]: !p[nom]}))} className={`p-4 flex justify-between items-center cursor-pointer ${isChecked ? 'bg-slate-50 opacity-50 line-through' : ''}`}>
                             <div className="flex items-center space-x-3">
-                              <input type="checkbox" checked={isChecked} onChange={() => {}} className="w-4 h-4 text-emerald-600 rounded" />
-                              <span className="font-medium text-sm text-slate-800">{nom}</span>
+                              <span className="text-lg">{isChecked ? '☑️' : '⬜'}</span>
+                              <div>
+                                <span className="font-medium text-slate-800">{nom}</span>
+                                {data.enPromo && <span className="ml-2 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px] font-black">Action -{data.remise}%</span>}
+                              </div>
                             </div>
-                            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
-                              {qteAff}
-                            </span>
+                            <span className="font-bold text-emerald-700">~ {data.quantite >= 1000 ? `${(data.quantite/1000).toFixed(2)} kg` : `${Math.round(data.quantite)} g`}</span>
                           </div>
                         );
                       })}
                     </div>
                   </div>
                 )}
+
+                {activeTab === 'catalogue' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {RECETTES_DISPONIBLES.map(r => (
+                      <div key={r.id} onClick={() => setRecetteSelectionnee(r)} className="bg-white p-4 rounded-2xl border border-slate-200 cursor-pointer hover:border-emerald-300">
+                        <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-semibold">{r.categorie}</span>
+                        <h3 className="font-bold text-slate-900 mt-2">{r.nom}</h3>
+                        <p className="text-xs text-slate-500 mt-1">{r.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </main>
 
-              <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 p-3 flex justify-around shadow-lg z-30">
-                <button 
-                  onClick={() => setActiveTab('menus')}
-                  className={`flex flex-col items-center text-xs font-bold ${activeTab === 'menus' ? 'text-emerald-600' : 'text-slate-400'}`}
-                >
-                  <span>📅 Menus</span>
-                </button>
-                <button 
-                  onClick={() => setActiveTab('courses')}
-                  className={`flex flex-col items-center text-xs font-bold ${activeTab === 'courses' ? 'text-emerald-600' : 'text-slate-400'}`}
-                >
-                  <span>🛒 Courses</span>
-                </button>
-              </nav>
-
               {recetteSelectionnee && (
-                <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-                  <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-black text-slate-900">{recetteSelectionnee.nom}</h3>
-                      <button onClick={() => setRecetteSelectionnee(null)} className="text-slate-400 font-bold p-1">✕</button>
+                <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+                  <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+                    <h3 className="text-xl font-black">{recetteSelectionnee.nom}</h3>
+                    <p className="text-xs text-slate-600">{recetteSelectionnee.description}</p>
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-xs uppercase text-slate-400">Étapes :</h4>
+                      {recetteSelectionnee.etapes.map((e, i) => (
+                        <p key={i} className="text-xs bg-slate-50 p-2.5 rounded-xl border">{i+1}. {e}</p>
+                      ))}
                     </div>
-                    <p className="text-xs text-slate-600 italic">{recetteSelectionnee.description}</p>
-                    <button onClick={() => setRecetteSelectionnee(null)} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md">
-                      Fermer
-                    </button>
+                    <button onClick={() => setRecetteSelectionnee(null)} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl">Fermer</button>
                   </div>
                 </div>
               )}
@@ -253,6 +470,3 @@
     </script>
 </body>
 </html>
-
-const SUPABASE_URL = "https://pudwivglduriyoowwoap.supabase.co";
-   const SUPABASE_ANON_KEY = "sb_publishable_3Znwn5zoP8Cop0fB1M_JpQ_CRhglTDG";
