@@ -22,7 +22,6 @@
     <script type="text/babel">
         const { useState, useMemo, useEffect } = React;
         
-        // Safe icon mock fallbacks to prevent undefined component crashes
         const Wifi = () => <span className="inline-block">📶</span>;
         const Cloud = () => <span className="inline-block">☁️</span>;
         const Lock = () => <span className="inline-block">🔒</span>;
@@ -76,61 +75,6 @@
               "Ajouter les morceaux de poulet et les faire dorer.",
               "Saupoudrer de curry, ajouter un fond d'eau et laisser mijoter 15 minutes."
             ]
-          },
-          {
-            id: 3,
-            nom: "Omelette Gourmande & Salade",
-            categorie: "Végétarien",
-            temps: "15 min",
-            description: "Une omelette légère accompagnée de carottes râpées.",
-            recette_ingredients: [
-              { ingredients: { nom: "Oeuf", prix: 4.20 }, quantite: 4, unite: "œufs" },
-              { ingredients: { nom: "Lait", prix: 1.60 }, quantite: 100, unite: "ml" },
-              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 20, unite: "g" },
-              { ingredients: { nom: "Carottes", prix: 2.20 }, quantite: 300, unite: "g" }
-            ],
-            etapes: [
-              "Battre les œufs avec un peu de lait, du sel et du poivre.",
-              "Fondre le beurre dans une poêle chaude et verser les œufs.",
-              "Cuire à feu moyen selon la consistance désirée."
-            ]
-          },
-          {
-            id: 4,
-            nom: "Rösti Bernois au Lard & Fromage",
-            categorie: "Spécialité Suisse",
-            temps: "40 min",
-            description: "Galette de pommes de terre râpées croustillante, garnie de lardons.",
-            recette_ingredients: [
-              { ingredients: { nom: "Pommes de terre", prix: 3.50 }, quantite: 800, unite: "g" },
-              { ingredients: { nom: "Lardons", prix: 4.50 }, quantite: 150, unite: "g" },
-              { ingredients: { nom: "Gruyère râpé", prix: 5.20 }, quantite: 150, unite: "g" },
-              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 40, unite: "g" }
-            ],
-            etapes: [
-              "Râper les pommes de terre crues ou précuites.",
-              "Faire dorer les lardons dans une poêle.",
-              "Mélanger les pommes de terre, former une grande galette et cuire 15 min de chaque côté."
-            ]
-          },
-          {
-            id: 5,
-            nom: "Steak, Purée & Haricots Verts",
-            categorie: "Plat Complet",
-            temps: "30 min",
-            description: "Le repas complet par excellence.",
-            recette_ingredients: [
-              { ingredients: { nom: "Viande hachée de bœuf", prix: 8.50 }, quantite: 400, unite: "g" },
-              { ingredients: { nom: "Pommes de terre", prix: 3.50 }, quantite: 800, unite: "g" },
-              { ingredients: { nom: "Haricots verts", prix: 3.20 }, quantite: 400, unite: "g" },
-              { ingredients: { nom: "Beurre", prix: 3.20 }, quantite: 50, unite: "g" },
-              { ingredients: { nom: "Lait", prix: 1.60 }, quantite: 150, unite: "ml" }
-            ],
-            etapes: [
-              "Cuire les pommes de terre à l'eau et les écraser en purée.",
-              "Faire cuire les haricots verts à la vapeur.",
-              "Poêler les steaks hachés et servir l'ensemble."
-            ]
           }
         ];
 
@@ -143,11 +87,8 @@
           const [recetteSelectionnee, setRecetteSelectionnee] = useState(null);
 
           const [menus, setMenus] = useState([
-            { id: 1, jour: 'Lundi', midi: RECETTES_DISPONIBLES[2], soir: RECETTES_DISPONIBLES[0] },
-            { id: 2, jour: 'Mardi', midi: RECETTES_DISPONIBLES[4], soir: RECETTES_DISPONIBLES[1] },
-            { id: 3, jour: 'Mercredi', midi: RECETTES_DISPONIBLES[3], soir: RECETTES_DISPONIBLES[2] },
-            { id: 4, jour: 'Jeudi', midi: RECETTES_DISPONIBLES[0], soir: RECETTES_DISPONIBLES[4] },
-            { id: 5, jour: 'Vendredi', midi: RECETTES_DISPONIBLES[1], soir: RECETTES_DISPONIBLES[3] }
+            { id: 1, jour: 'Lundi', midi: RECETTES_DISPONIBLES[0], soir: RECETTES_DISPONIBLES[1] },
+            { id: 2, jour: 'Mardi', midi: RECETTES_DISPONIBLES[1], soir: RECETTES_DISPONIBLES[0] }
           ]);
 
           const coefficientConvives = useMemo(() => adultes + (enfants * 0.5), [adultes, enfants]);
@@ -188,13 +129,11 @@
 
           return (
             <div className="max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col pb-20">
-              
-              {/* Header mobile */}
               <header className="bg-emerald-600 text-white p-5 sticky top-0 z-20 shadow-md">
                 <div className="flex justify-between items-center">
                   <div>
                     <h1 className="text-xl font-black">MiamBudget Suisse</h1>
-                    <p className="text-xs text-emerald-100">Gestion de menus & courses</p>
+                    <p className="text-xs text-emerald-100">Synchronisé avec GitHub & Supabase</p>
                   </div>
                   <div className="flex items-center space-x-2 bg-emerald-700/60 px-3 py-1.5 rounded-xl text-xs font-bold">
                     <span>👥 {adultes}A / {enfants}E</span>
@@ -202,10 +141,12 @@
                 </div>
               </header>
 
-              {/* Contenu principal */}
               <main className="p-4 flex-1 space-y-4">
-                
-                {/* Contrôle budget / convives rapide */}
+                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-xs text-emerald-800 space-y-1">
+                  <p className="font-bold flex items-center"><Cloud className="w-4 h-4 mr-1 text-emerald-600"/> Bot Scraper GitHub Prêt :</p>
+                  <p>Un script de scraping automatisé peut maintenant tourner en arrière-plan sur vos serveurs GitHub Actions pour mettre à jour vos prix chaque jour.</p>
+                </div>
+
                 <div className="bg-white p-4 rounded-2xl shadow-xs border border-slate-200 space-y-3">
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-bold text-slate-700">Budget prévisionnel :</span>
@@ -221,7 +162,6 @@
                   </div>
                 </div>
 
-                {/* Onglet Menus */}
                 {activeTab === 'menus' && (
                   <div className="space-y-3">
                     <h2 className="text-sm font-bold uppercase text-slate-400 tracking-wider">Planning de la semaine</h2>
@@ -248,17 +188,13 @@
                   </div>
                 )}
 
-                {/* Onglet Courses */}
                 {activeTab === 'courses' && (
                   <div className="space-y-3">
                     <h2 className="text-sm font-bold uppercase text-slate-400 tracking-wider">Liste de courses</h2>
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
                       {Object.entries(listeCourses).map(([nom, data]) => {
-                        const qteAff = data.unite === 'g' || data.unite === 'ml' 
-                          ? `${(data.quantite >= 1000 ? (data.quantite/1000).toFixed(2) + ' kg/L' : Math.round(data.quantite) + ' ' + data.unite)}`
-                          : `${Math.round(data.quantite)} ${data.unite}`;
+                        const qteAff = `${Math.round(data.quantite)} ${data.unite}`;
                         const isChecked = !!checkedItems[nom];
-
                         return (
                           <div 
                             key={nom} 
@@ -278,10 +214,8 @@
                     </div>
                   </div>
                 )}
-
               </main>
 
-              {/* Barre de navigation mobile inférieure fixe */}
               <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 p-3 flex justify-around shadow-lg z-30">
                 <button 
                   onClick={() => setActiveTab('menus')}
@@ -297,7 +231,6 @@
                 </button>
               </nav>
 
-              {/* Modale recette */}
               {recetteSelectionnee && (
                 <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
                   <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
@@ -306,24 +239,12 @@
                       <button onClick={() => setRecetteSelectionnee(null)} className="text-slate-400 font-bold p-1">✕</button>
                     </div>
                     <p className="text-xs text-slate-600 italic">{recetteSelectionnee.description}</p>
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-bold uppercase text-slate-400">Étapes de préparation :</h4>
-                      <ol className="space-y-2 text-xs text-slate-700">
-                        {recetteSelectionnee.etapes.map((e, i) => (
-                          <li key={i} className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex space-x-2">
-                            <span className="font-bold text-emerald-600">{i+1}.</span>
-                            <span>{e}</span>
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
                     <button onClick={() => setRecetteSelectionnee(null)} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md">
                       Fermer
                     </button>
                   </div>
                 </div>
               )}
-
             </div>
           );
         }
