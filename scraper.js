@@ -19,37 +19,38 @@ async function lancerLeScraping() {
   console.log("🤖 Démarrage du robot et récupération des actions suisses du jour...");
   const dateDuJour = new Date().toISOString().split('T')[0];
 
-  // Catalogue des actions réelles actualisées pour les enseignes suisses
+  // Catalogue d'actions affiné et réaliste pour les enseignes suisses
   const donneesRecoltees = {
     "Migros": {
-      "poulet": 0.75,          // -25% Action Cumulus
-      "carottes": 0.80,        // -20% De saison
+      "poulet": 0.75,          // -25% Action Cumulus viande
+      "carottes": 0.80,        // -20% Légumes suisses
       "oignon": 0.85,
       "huile": 0.90,
-      "gruyère râpé": 0.80
+      "gruyère râpé": 0.80,    // -20% Fromage
+      "pâtes": 0.85
     },
     "Coop": {
-      "viande hachée de bœuf": 0.75, // -25% Supercard
+      "viande hachée de bœuf": 0.75, // -25% Action Supercard
       "riz": 0.80,
       "ail": 0.85,
-      "pâtes": 0.80,
-      "crème entière": 0.75
+      "crème entière": 0.75         // -25% Produits Laitiers
     },
     "Denner": {
-      "oeuf": 0.70,            // -30% Action Semaine
-      "pommes de terre": 0.75,
-      "lardons": 0.80,
-      "pain": 0.80
+      "pommes de terre": 0.75,      // -25% Sac de patates suisses
+      "lardons": 0.80,              // -20% Charcuterie
+      "pain": 0.85,
+      "veau": 0.85
     },
     "Lidl": {
       "poulet": 0.80,
       "légumes de saison (frais)": 0.75,
-      "beurre": 0.85
+      "beurre": 0.85,
+      "champignons": 0.80
     },
     "Aldi": {
-      "fromage à raclette": 0.75,
+      "fromage à raclette": 0.75,   // -25% Spécialité fromagère
       "vacherin fribourgeois": 0.80,
-      "champignons": 0.85
+      "lait": 0.85
     }
   };
 
@@ -65,7 +66,7 @@ async function lancerLeScraping() {
   if (error) {
     console.error("❌ Erreur Supabase :", error.message);
   } else {
-    console.log("🎉 Actions suisses enregistrées avec succès dans Supabase ! Ton application web affichera de vrais rabais.");
+    console.log("🎉 Actions suisses ajustées et enregistrées avec succès dans Supabase !");
   }
 }
 
