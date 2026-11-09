@@ -192,7 +192,6 @@
             "Aldi": { nom: "Aldi", multiplicateur: 0.80 }
           };
 
-          // Chargement EXCLUSIF des vraies données depuis Supabase (issues de ton robot scraper)
           const chargerActionsSupabase = async () => {
             setIsFetching(true);
             try {
@@ -259,7 +258,6 @@
             const stores = ['Migros', 'Coop', 'Denner', 'Lidl', 'Aldi'];
             stores.forEach(store => {
               const storeInfo = supermarchesDisponibles[store];
-              // Utilisation exacte des réductions trouvées par ton robot dans Supabase
               const storePromo = actionsSemaine[store]?.[nom.toLowerCase()] || 1;
               const currentOriginal = prixRef * (storeInfo.multiplicateur || 1);
               const currentPrice = currentOriginal * storePromo;
@@ -385,7 +383,7 @@
                     </span>
                     {lastSync && (
                       <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded flex items-center">
-                        📶 Données réelles du robot ({lastSync})
+                        📶 Données du robot ({lastSync})
                       </span>
                     )}
                   </div>
@@ -451,6 +449,10 @@
                     <div className="divide-y divide-slate-100">
                       {Object.entries(listeCourses).map(([nom, data]) => {
                         const isChecked = !!checkedItems[nom];
+                        let affichageUniteRef = data.unite === 'g' ? 'kg' : (data.unite === 'ml' ? 'L' : data.unite);
+                        let facteurPrix = (data.unite === 'g' || data.unite === 'ml') ? data.quantite / 1000 : data.quantite;
+                        let coutTotalArticle = facteurPrix * data.prixUnitaire;
+
                         return (
                           <div key={nom} onClick={() => setCheckedItems(p => ({...p, [nom]: !p[nom]}))} className={`p-4 flex justify-between items-center cursor-pointer ${isChecked ? 'bg-slate-50 opacity-50 line-through' : ''}`}>
                             <div className="flex items-center space-x-3">
@@ -463,11 +465,14 @@
                                     Action -{data.remise}%
                                   </span>
                                 )}
+                                <div className="text-[11px] text-slate-400 mt-0.5">
+                                  Qté : {data.quantite >= 1000 && (data.unite === 'g' || data.unite === 'ml') ? `${(data.quantite/1000).toFixed(2)} ${affichageUniteRef}` : `${Math.round(data.quantite)} ${data.unite}`} 
+                                  &bull; Prix réf : {data.prixUnitaire.toFixed(2)} CHF / {affichageUniteRef}
+                                </div>
                               </div>
                             </div>
                             <div className="text-right">
-                              <span className="font-bold text-emerald-700 block">~ {data.quantite >= 1000 ? `${(data.quantite/1000).toFixed(2)} kg` : `${Math.round(data.quantite)} g`}</span>
-                              <span className="text-xs text-slate-500 font-semibold">{((data.quantite >= 1000 ? data.quantite/1000 : data.quantite/1000) * data.prixUnitaire).toFixed(2)} CHF</span>
+                              <span className="font-bold text-emerald-700 block text-sm">~ {coutTotalArticle.toFixed(2)} CHF</span>
                             </div>
                           </div>
                         );
