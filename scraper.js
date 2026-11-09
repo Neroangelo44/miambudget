@@ -16,7 +16,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function lancerLeScrapingPur() {
-  console.log("🤖 Démarrage du scraping 100% réel via les flux ouverts et agrégateurs suisses...");
+  console.log("🤖 Démarrage du scraping 100% réel via les API publiques suisses...");
   const dateDuJour = new Date().toISOString().split('T')[0];
 
   let donneesReellesBrutes = {
@@ -28,21 +28,21 @@ async function lancerLeScrapingPur() {
   };
 
   try {
-    // Interrogation d'un point d'accès d'agrégation de catalogues publics suisses neutres
-    console.log("🌐 Récupération des données d'actions depuis l'agrégateur public suisse...");
-    const response = await axios.get('https://raw.githubusercontent.com/open-dados/switzerland-grocery-data/main/promos.json', {
+    // Interrogation d'un point d'accès public et ouvert de données de consommation en Suisse
+    console.log("🌐 Récupération des données d'actions depuis l'index ouvert suisse...");
+    const response = await axios.get('https://api.coop.ch/open-data/v1/promotions' || 'https://data.sbb.ch/api/explore/v2.1/catalog/datasets/prices/records', {
       timeout: 10000,
       validateStatus: (status) => status < 500
     });
 
     if (response.status === 200 && response.data) {
       donneesReellesBrutes = response.data;
-      console.log("✅ Données réelles de prospectus récupérées avec succès !");
+      console.log("✅ Données réelles récupérées avec succès !");
     } else {
-      console.warn("⚠️ Le flux public n'a pas retourné de données valides (Statut: " + response.status + ").");
+      console.warn("⚠️ Le serveur public n'a pas retourné de catalogue actif (Statut: " + response.status + ").");
     }
   } catch (err) {
-    console.warn("⚠️ Impossible de joindre le flux externe (" + err.message + "). Enregistrement d'un état propre sans simulation.");
+    console.warn("⚠️ Erreur de connexion au flux distant (" + err.message + "). Enregistrement d'un état propre vide sans aucune simulation.");
   }
 
   console.log("💾 Enregistrement strict des données réelles dans Supabase...");
