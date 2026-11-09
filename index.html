@@ -25,27 +25,12 @@
         const { useState, useMemo, useEffect } = React;
         const { createClient } = supabase;
 
-        // --- CONFIGURATION SUPABASE INTÉGRÉE ---
+        // --- CONFIGURATION SUPABASE OFFICIELLE ---
         const SUPABASE_URL = "https://pudwivglduriyoowwoap.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_3Znwn5zoP8Cop0fB1M_JpQ_CRhglTDG";
         const clientSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Composants d'icônes
-        const Cloud = () => <span className="inline-block">☁️</span>;
-        const Lock = () => <span className="inline-block">🔒</span>;
-        const LogOut = () => <span className="inline-block">🚪</span>;
-        const Users = () => <span className="inline-block">👥</span>;
-        const Calendar = () => <span className="inline-block">📅</span>;
-        const ShoppingCart = () => <span className="inline-block">🛒</span>;
-        const BookOpen = () => <span className="inline-block">📖</span>;
-        const Sparkles = () => <span className="inline-block">✨</span>;
-        const RefreshCw = () => <span className="inline-block">🔄</span>;
-        const ChefHat = () => <span className="inline-block">👨‍🍳</span>;
-        const Store = () => <span className="inline-block">🏬</span>;
-        const CheckSquare = () => <span className="inline-block">☑️</span>;
-        const Square = () => <span className="inline-block">⬜</span>;
-        const Wifi = () => <span className="inline-block">📶</span>;
-
+        // Catalogue riche et complet de recettes suisses et variées
         const RECETTES_DISPONIBLES = [
           {
             id: 1,
@@ -122,6 +107,61 @@
               "Mélanger les pommes de terre, former une grande galette dans le beurre chaud.",
               "Cuire 15 min de chaque côté, parsemer de Gruyère à la fin."
             ]
+          },
+          {
+            id: 5,
+            nom: "Émincé de Veau à la Zurichoise",
+            categorie: "Spécialité Suisse",
+            temps: "35 min",
+            description: "Tendre émincé de viande en sauce crémeuse aux champignons.",
+            recette_ingredients: [
+              { ingredients: { nom: "veau", prix: 18.00 }, quantite: 600, unite: "g" },
+              { ingredients: { nom: "champignons", prix: 4.00 }, quantite: 300, unite: "g" },
+              { ingredients: { nom: "crème entière", prix: 2.80 }, quantite: 250, unite: "ml" },
+              { ingredients: { nom: "oignon", prix: 1.80 }, quantite: 100, unite: "g" }
+            ],
+            etapes: [
+              "Saisir rapidement la viande émincée à vif, puis réserver.",
+              "Faire sauter les champignons et les oignons dans la même poêle.",
+              "Ajouter la crème entière, laisser réduire légèrement.",
+              "Remettre la viande, napper de sauce et servir bien chaud."
+            ]
+          },
+          {
+            id: 6,
+            nom: "Fondue Moitié-Moitié",
+            categorie: "Spécialité Suisse",
+            temps: "20 min",
+            description: "Le grand classique helvétique au Gruyère AOP et Vacherin Fribourgeois.",
+            recette_ingredients: [
+              { ingredients: { nom: "gruyère râpé", prix: 5.20 }, quantite: 400, unite: "g" },
+              { ingredients: { nom: "vacherin fribourgeois", prix: 6.50 }, quantite: 400, unite: "g" },
+              { ingredients: { nom: "pain", prix: 3.00 }, quantite: 500, unite: "g" },
+              { ingredients: { nom: "ail", prix: 2.00 }, quantite: 10, unite: "g" }
+            ],
+            etapes: [
+              "Frotter le caquelon avec la gousse d'ail coupée.",
+              "Y fondre les fromages râpés avec un peu de vin blanc à feu doux.",
+              "Déguster en trempant des morceaux de pain."
+            ]
+          },
+          {
+            id: 7,
+            nom: "Hörnli & Ghackets",
+            categorie: "Plat Principal",
+            temps: "30 min",
+            description: "Pâtes en cornettes accompagnées de viande hachée de bœuf.",
+            recette_ingredients: [
+              { ingredients: { nom: "pâtes", prix: 2.20 }, quantite: 400, unite: "g" },
+              { ingredients: { nom: "viande hachée de bœuf", prix: 8.50 }, quantite: 500, unite: "g" },
+              { ingredients: { nom: "oignon", prix: 1.80 }, quantite: 150, unite: "g" },
+              { ingredients: { nom: "sauce tomate", prix: 2.00 }, quantite: 300, unite: "ml" }
+            ],
+            etapes: [
+              "Faire cuire les pâtes en cornettes.",
+              "Faire revenir les oignons et la viande hachée.",
+              "Incorporer la sauce tomate et laisser mijoter."
+            ]
           }
         ];
 
@@ -135,7 +175,6 @@
           const [activeTab, setActiveTab] = useState('menus');
           const [adultes, setAdultes] = useState(2);
           const [enfants, setEnfants] = useState(1);
-          const [supermarcheActif] = useState('Optimise');
           const [recetteSelectionnee, setRecetteSelectionnee] = useState(null);
           const [checkedItems, setCheckedItems] = useState({});
           const [budgetMax, setBudgetMax] = useState(150);
@@ -202,7 +241,7 @@
           const [menus, setMenus] = useState([
             { id: 1, jour: 'Lundi', midi: RECETTES_DISPONIBLES[2], soir: RECETTES_DISPONIBLES[0] },
             { id: 2, jour: 'Mardi', midi: RECETTES_DISPONIBLES[3], soir: RECETTES_DISPONIBLES[1] },
-            { id: 3, jour: 'Mercredi', midi: RECETTES_DISPONIBLES[0], soir: RECETTES_DISPONIBLES[2] }
+            { id: 3, jour: 'Mercredi', midi: RECETTES_DISPONIBLES[5], soir: RECETTES_DISPONIBLES[4] }
           ]);
 
           const coefficientConvives = useMemo(() => adultes + (enfants * 0.5), [adultes, enfants]);
@@ -324,8 +363,7 @@
                       disabled={authLoading}
                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-md transition flex items-center justify-center"
                     >
-                      <Lock className="w-4 h-4 mr-2" />
-                      {authLoading ? 'Connexion...' : 'Se connecter'}
+                      🔒 {authLoading ? 'Connexion...' : 'Se connecter'}
                     </button>
                   </form>
                 </div>
@@ -339,20 +377,18 @@
                 <div>
                   <div className="flex items-center space-x-2">
                     <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full flex items-center w-fit">
-                      <Cloud className="w-3.5 h-3.5 mr-1 text-emerald-500" />
-                      Supabase Connecté
+                      ☁️ Supabase Connecté
                     </span>
                     {lastSync && (
                       <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded flex items-center">
-                        <Wifi className="w-3 h-3 mr-1 text-emerald-500" />
-                        Robot synchronisé à {lastSync}
+                        📶 Robot synchronisé à {lastSync}
                       </span>
                     )}
                   </div>
                   <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">MiamBudget Suisse</h1>
                 </div>
-                <button onClick={handleLogout} className="bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 p-2.5 rounded-2xl transition">
-                  <LogOut className="w-5 h-5" />
+                <button onClick={handleLogout} className="bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 p-2.5 rounded-2xl transition" title="Se déconnecter">
+                  🚪
                 </button>
               </header>
 
@@ -386,11 +422,11 @@
                           <span className="text-emerald-700">{(getCoutRecette(m.midi) + getCoutRecette(m.soir)).toFixed(2)} CHF</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div onClick={() => setRecetteSelectionnee(m.midi)} className="bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer">
+                          <div onClick={() => setRecetteSelectionnee(m.midi)} className="bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer hover:border-emerald-300 transition">
                             <span className="text-[10px] font-bold text-slate-400">MIDI</span>
                             <h4 className="font-bold text-sm text-slate-800">{m.midi.nom}</h4>
                           </div>
-                          <div onClick={() => setRecetteSelectionnee(m.soir)} className="bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer">
+                          <div onClick={() => setRecetteSelectionnee(m.soir)} className="bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer hover:border-emerald-300 transition">
                             <span className="text-[10px] font-bold text-slate-400">SOIR</span>
                             <h4 className="font-bold text-sm text-slate-800">{m.soir.nom}</h4>
                           </div>
@@ -401,11 +437,11 @@
                 )}
 
                 {activeTab === 'courses' && (
-                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
                     <div className="p-4 bg-slate-100 border-b font-bold text-sm flex justify-between items-center">
                       <span>Liste de courses intelligente (Actions du robot)</span>
                       <button onClick={chargerActionsSupabase} className="text-xs text-emerald-600 font-bold hover:underline flex items-center">
-                        <RefreshCw className="w-3 h-3 mr-1" /> Actualiser
+                        🔄 Actualiser
                       </button>
                     </div>
                     <div className="divide-y divide-slate-100">
@@ -427,7 +463,7 @@
                             </div>
                             <div className="text-right">
                               <span className="font-bold text-emerald-700 block">~ {data.quantite >= 1000 ? `${(data.quantite/1000).toFixed(2)} kg` : `${Math.round(data.quantite)} g`}</span>
-                              <span className="text-xs text-slate-500 font-semibold">{(data.quantite >= 1000 ? (data.quantite/1000) * data.prixUnitaire : (data.quantite/1000) * data.prixUnitaire).toFixed(2)} CHF</span>
+                              <span className="text-xs text-slate-500 font-semibold">{((data.quantite >= 1000 ? data.quantite/1000 : data.quantite/1000) * data.prixUnitaire).toFixed(2)} CHF</span>
                             </div>
                           </div>
                         );
@@ -439,7 +475,7 @@
                 {activeTab === 'catalogue' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {RECETTES_DISPONIBLES.map(r => (
-                      <div key={r.id} onClick={() => setRecetteSelectionnee(r)} className="bg-white p-4 rounded-2xl border border-slate-200 cursor-pointer hover:border-emerald-300">
+                      <div key={r.id} onClick={() => setRecetteSelectionnee(r)} className="bg-white p-4 rounded-2xl border border-slate-200 cursor-pointer hover:border-emerald-300 transition shadow-xs">
                         <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-semibold">{r.categorie}</span>
                         <h3 className="font-bold text-slate-900 mt-2">{r.nom}</h3>
                         <p className="text-xs text-slate-500 mt-1">{r.description}</p>
